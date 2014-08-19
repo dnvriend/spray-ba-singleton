@@ -1,3 +1,0 @@
-#!/bin/bash
-export CLUSTER_IP=$(ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
-java -jar /appl/spray-ba-singleton_2.11-0.0.1-one-jar.jar

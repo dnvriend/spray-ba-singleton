@@ -10,6 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.util.{Try, Failure}
+import akka.kernel.Bootable
 
 trait RequestTimeout {
   implicit val timeout = Timeout(5 seconds)
@@ -60,54 +61,48 @@ trait SecurityRoute extends Directives with RequestTimeout {
   }
 }
 
-object Main extends App with SimpleRoutingApp with UserAuthenticator with SecurityRoute {
+class Main extends Bootable with SimpleRoutingApp with UserAuthenticator with SecurityRoute {
   implicit val system = ActorSystem("ClusterSystem")
   implicit val executionContext = system.dispatcher
 
   // The ClusterSingletonManagers
-  system.actorOf(ClusterSingletonManager.props(
-    singletonProps = SecurityService.props,
-    singletonName = "securityService",
-    terminationMessage = PoisonPill,
-    role = None),
-    name = "singletonSecurityService")
+    system.actorOf(ClusterSingletonManager.props(
+      singletonProps = SecurityService.props,
+      singletonName = "securityService",
+      terminationMessage = PoisonPill,
+      role = None),
+      name = "singletonSecurityService")
 
-  system.actorOf(ClusterSingletonManager.props(
-    singletonProps = SecurityServiceView.props,
-    singletonName = "securityServiceView",
-    terminationMessage = PoisonPill,
-    role = None),
-    name = "singletonSecurityServiceView")
+    system.actorOf(ClusterSingletonManager.props(
+      singletonProps = SecurityServiceView.props,
+      singletonName = "securityServiceView",
+      terminationMessage = PoisonPill,
+      role = None),
+      name = "singletonSecurityServiceView")
 
-  // The ClusterSingletonProxies
-  val securityService = system.actorOf(ClusterSingletonProxy.props("/user/singletonSecurityService/securityService", None), "securityServiceProxy")
-  val securityServiceView = system.actorOf(ClusterSingletonProxy.props("/user/singletonSecurityServiceView/securityServiceView", None), "securityServiceViewProxy")
+    // The ClusterSingletonProxies
+    val securityService = system.actorOf(ClusterSingletonProxy.props("/user/singletonSecurityService/securityService", None), "securityServiceProxy")
+    val securityServiceView = system.actorOf(ClusterSingletonProxy.props("/user/singletonSecurityServiceView/securityServiceView", None), "securityServiceViewProxy")
 
-  val config = Config(system)
+    val config = Config(system)
 
-  startServer(interface = config.bindAddress, port = config.bindPort) {
-    pathPrefix("api") {
-      securityRoute
-    } ~
-    pathPrefix("web") {
-      getFromResourceDirectory("web")
-    } ~
-    authenticate(BasicAuth(authenticator _, realm = "secure site")) { username =>
-      path("secure") {
-        complete("Welcome!")
+  def startup() = {    
+    startServer(interface = config.bindAddress, port = config.bindPort) {
+      pathPrefix("api") {
+        securityRoute
+      } ~
+      pathPrefix("web") {
+        getFromResourceDirectory("web")
+      } ~
+      authenticate(BasicAuth(authenticator _, realm = "secure site")) { username =>
+        path("secure") {
+          complete("Welcome!")
+        }
       }
-    }
+    }  
   }
 
-  // try to open the app in the default browser
-  Try {
-    println("Please wait, the application is launching...")
-    // sleeping for my old Macbook@2009, it needs some time to get things up and running...
-    Thread.sleep((5 seconds).toMillis)
-    val url = "http://localhost:8080/web/index.html"
-    java.awt.Desktop.getDesktop.browse(java.net.URI.create(url))
-  } match {
-    case Failure(cause) => println("Could not open browser: " + cause.getMessage)
-    case _ =>
+  def shutdown() = {
+    system.shutdown()
   }
 }

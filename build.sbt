@@ -1,3 +1,7 @@
+import akka.sbt.AkkaKernelPlugin                                                                                                 
+
+import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions, distMainClass} 
+
 organization := "com.github.dnvriend"
 
 name := "spray-ba-singleton"
@@ -18,6 +22,7 @@ libraryDependencies ++=
     val jsonV = "1.2.6"
     Seq(
       "org.scala-lang" % "scala-library" % scalaV,
+      "com.typesafe.akka" %% "akka-kernel" % akkaV,
       "com.typesafe.akka" %% "akka-actor" %  akkaV,
       "com.typesafe.akka" %% "akka-slf4j" % akkaV,
       "com.typesafe.akka" %% "akka-cluster" % akkaV,
@@ -46,6 +51,9 @@ publishArtifact in Test := false
 
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
-com.github.retronym.SbtOneJar.oneJarSettings
+akka.sbt.AkkaKernelPlugin.distSettings
 
-net.virtualvoid.sbt.graph.Plugin.graphSettings
+distJvmOptions in Dist := "-Xms256M -Xmx1024M"
+
+distMainClass in Dist := "akka.kernel.Main com.example.Main"
+
