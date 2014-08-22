@@ -1,6 +1,4 @@
-import akka.sbt.AkkaKernelPlugin                                                                                                 
-
-import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions, distMainClass} 
+import akka.sbt.AkkaKernelPlugin.{ Dist, distJvmOptions, distMainClass}
 
 organization := "com.github.dnvriend"
 
@@ -8,7 +6,7 @@ name := "spray-ba-singleton"
 
 version := "0.0.1"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
 resolvers += "spray" at "http://repo.spray.io/"
 
@@ -16,7 +14,7 @@ resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
 
 libraryDependencies ++=
   {	val scalaV = "2.11.1"
-    val akkaV = "2.3.4"
+    val akkaV = "2.3.5"
     val sprayV = "1.3.1"
     val shapelessV = "2.0.0"
     val jsonV = "1.2.6"
@@ -53,7 +51,7 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 akka.sbt.AkkaKernelPlugin.distSettings
 
-distJvmOptions in Dist := "-Xms256M -Xmx1024M"
+distJvmOptions in Dist := "-Xms64M -Xmx128M"
 
 distMainClass in Dist := "akka.kernel.Main com.example.Main"
 

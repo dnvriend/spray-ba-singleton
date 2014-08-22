@@ -1,6 +1,7 @@
 package com.example
 
 import akka.contrib.pattern.{ClusterSingletonProxy, ClusterSingletonManager}
+import com.typesafe.config.ConfigFactory
 import spray.routing.{Directives, Route, SimpleRoutingApp}
 import spray.http._
 import akka.actor.{PoisonPill, ActorRef, ActorSystem}
@@ -70,7 +71,7 @@ class Main extends Bootable with SimpleRoutingApp with UserAuthenticator with Se
       singletonProps = SecurityService.props,
       singletonName = "securityService",
       terminationMessage = PoisonPill,
-      role = None),
+      role = Some("worker")),
       name = "singletonSecurityService")
 
     system.actorOf(ClusterSingletonManager.props(
